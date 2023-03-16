@@ -50,28 +50,35 @@ led_img = html.Img(src=app.get_asset_url('off.png'),width='300px', height='300px
 #dashboard layout
 app.layout = html.Div([
     html.H1(children='Control Panel'),
-    html.H2(children='LED Dashboard'),
+    html.H4(children='LED Status'),
     html.Div(id='led-box', children=[
         html.H1(children=True, style={'text-align': 'center'}),
         html.Button(led_img, id='led-img', n_clicks = 0)
     ]),
     
+    html.Br(),html.Br(),html.Br(),
+
     html.Div([
-        html.H2("Humidity: "),
-        html.Div(id='humidity_value')
-    ]),
+        html.Div(id='temperature_value'),
+        html.Img(src=app.get_asset_url('h.png'), width='200px', height='200px')
+    ], style={'display': 'inline-block', 'vertical-align': 'top', 'margin-right': '20px'}),
     
     html.Div([
-        html.H2("Temperature: "),
-        html.Div(id='temperature_value')
-    ]),
-    
+        html.Div(id='humidity_value'),
+        html.Img(src=app.get_asset_url('t.png'), width='200px', height='200px')
+    ], style={'display': 'inline-block', 'vertical-align': 'top'}),
+
+    html.Div(id='values-container', children=[
+        html.Div(id='temp-value', style={'font-size': '48px'}),
+        html.Div(id='humi-value', style={'font-size': '48px'})
+    ], style={'position': 'absolute', 'top': '20px', 'right': '20px', 'text-align': 'right'}),
+
     dcc.Interval(
         id='interval-component',
-        interval=2*1000, # updates every 2 seconds
+        interval=2 * 1000,  # updates every 2 seconds
         n_intervals=0
     )
-])
+], style={'font-size': '24px'})
 
 @app.callback(
     Output('humidity_value', 'children'),
