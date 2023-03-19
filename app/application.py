@@ -45,7 +45,7 @@ app = Dash(__name__)
 app.title = 'Phase 2'
 
 #initialize image
-led_img = html.Img(src=app.get_asset_url('off.png'),width='300px', height='300px')
+led_img = html.Img(src=app.get_asset_url('off.png'),width='150px', height='150px')
 
 #dashboard layout
 app.layout = html.Div([
@@ -58,20 +58,76 @@ app.layout = html.Div([
     
     html.Br(),html.Br(),html.Br(),
 
-    html.Div([
-        html.Div(id='temperature_value'),
-        html.Img(src=app.get_asset_url('h.png'), width='200px', height='200px')
-    ], style={'display': 'inline-block', 'vertical-align': 'top', 'margin-right': '20px'}),
-    
-    html.Div([
-        html.Div(id='humidity_value'),
-        html.Img(src=app.get_asset_url('t.png'), width='200px', height='200px')
-    ], style={'display': 'inline-block', 'vertical-align': 'top'}),
-
-    html.Div(id='values-container', children=[
-        html.Div(id='temp-value', style={'font-size': '48px'}),
-        html.Div(id='humi-value', style={'font-size': '48px'})
-    ], style={'position': 'absolute', 'top': '20px', 'right': '20px', 'text-align': 'right'}),
+    html.Div(
+    [
+        dcc.Graph(
+            id="temp-gauge",
+            figure={
+                "data": [
+                    {
+                        "type": "indicator",
+                        "value": 25,
+                        "mode": "gauge+number",
+                        "title": {"text": "Temperature"},
+                        "gauge": {
+                            "axis": {"range": [None, 50]},
+                            "bar": {"color": "#f44336"},
+                            "threshold": {
+                                "line": {"color": "black", "width": 4},
+                                "thickness": 0.75,
+                                "value": 35,
+                            },
+                            "steps": [
+                                {"range": [0, 10], "color": "#e1f5fe"},
+                                {"range": [10, 20], "color": "#b3e5fc"},
+                                {"range": [20, 30], "color": "#81d4fa"},
+                                {"range": [30, 40], "color": "#4fc3f7"},
+                                {"range": [40, 50], "color": "#29b6f6"},
+                            ],
+                            "borderwidth": 2,
+                            "bordercolor": "#b0bec5",
+                        },
+                    }
+                ]
+            },
+            style={"width": "50%", "display": "inline-block"},
+        ),
+        
+        dcc.Graph(
+            id="humi-gauge",
+            figure={
+                "data": [
+                    {
+                        "type": "indicator",
+                        "value": 60,
+                        "mode": "gauge+number",
+                        "title": {"text": "Humidity"},
+                        "gauge": {
+                            "axis": {"range": [None, 100]},
+                            "bar": {"color": "#4caf50"},
+                            "threshold": {
+                                "line": {"color": "black", "width": 4},
+                                "thickness": 0.75,
+                                "value": 70,
+                            },
+                            "steps": [
+                                {"range": [0, 20], "color": "#e8f5e9"},
+                                {"range": [20, 40], "color": "#c8e6c9"},
+                                {"range": [40, 60], "color": "#a5d6a7"},
+                                {"range": [60, 80], "color": "#81c784"},
+                                {"range": [80, 100], "color": "#66bb6a"},
+                            ],
+                            "borderwidth": 2,
+                            "bordercolor": "#b0bec5",
+                        },
+                    }
+                ]
+            },
+            style={"width": "50%", "display": "inline-block"},
+        ),
+    ],
+    style={"text-align": "center"},
+),
 
     dcc.Interval(
         id='interval-component',
@@ -81,14 +137,77 @@ app.layout = html.Div([
 ], style={'font-size': '24px'})
 
 @app.callback(
-    Output('humidity_value', 'children'),
-    Output('temperature_value', 'children'),
+    Output("temp-gauge", "figure"),
+    Output("humi-gauge", "figure"),
     Input('interval-component', 'n_intervals')
 )
-
-def update_values(n):
+def update_gauges(n):
     temp, humi = get_both()
-    return f'Temperature: {temp} C', f'Humidity: {humi}%'
+    
+    temp_fig = {
+        "data": [
+            {
+                "type": "indicator",
+                "value": temp,
+                "mode": "gauge+number",
+                "title": {"text": "Temperature"},
+                "gauge": {
+                    "axis": {"range": [None, 50]},
+                    "bar": {"color": "#f44336"},
+                    "threshold": {
+                        "line": {"color": "black", "width": 4},
+                        "thickness": 0.75,
+                        "value": 35,
+                    },
+                    "steps": [
+                        {"range": [0, 10], "color": "#e1f5fe"},
+                        {"range": [10, 20], "color": "#b3e5fc"},
+                        {"range": [20, 30], "color": "#81d4fa"},
+                        {"range": [30, 40], "color": "#4fc3f7"},
+                        {"range": [40, 50], "color": "#29b6f6"},
+                    ],
+                    "borderwidth": 2,
+                    "bordercolor": "#b0bec5",
+                },
+            }
+        ]
+    }
+    
+    humi_fig = {
+        "data": [
+            {
+                "type": "indicator",
+                "value": humi,
+                "mode": "gauge+number",
+                "title": {"text": "Humidity"},
+                "gauge": {
+                    "axis": {"range": [None, 100]},
+                    "bar": {"color": "#4caf50"},
+                    "threshold": {
+                        "line": {"color": "black", "width": 4},
+                        "thickness": 0.75,
+                        "value": 70,
+                    },
+                    "steps": [
+                        {"range": [0, 20], "color": "#e8f5e9"},
+                        {"range": [20, 40], "color": "#c8e6c9"},
+                        {"range": [40, 60], "color": "#a5d6a7"},
+                        {"range": [60, 80], "color": "#81c784"},
+                        {"range": [80, 100], "color": "#66bb6a"},
+                    ],
+                    "borderwidth": 2,
+                    "bordercolor": "#b0bec5",
+                },
+            }
+        ]
+    }
+    
+    return temp_fig, humi_fig
+
+# def update_values(n):
+#     temp, humi = get_both()
+#     return f'Temperature: {temp} C', f'Humidity: {humi}%'
+#
 
 @app.callback(
     Output('led-img', 'children'),
