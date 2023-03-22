@@ -8,11 +8,18 @@
 
 import dash.dependencies
 import dash_daq as daq
-from dash import html, Input, Output, dcc, Dash, ctx
+from dash import html, Input, Output, dcc, Dash
 import dash_bootstrap_components as dbc
 import RPi.GPIO as GPIO
 import Freenove_DHT as DHT
 import time as time
+import smtplib
+import email
+import imaplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+is_sent = True
 
 #setup GPIO outputs
 lightpin = 12
@@ -23,7 +30,8 @@ GPIO.setup(lightpin, GPIO.OUT)
 DHTPin = 40 #define the pin of DHT11
 dht = DHT.DHT(DHTPin) #create a DHT class object
 
-def get_both():    
+def get_both(): 
+    global is_sent   
     #for i in range(0,15):
     #    chk = dht.readDHT11() #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
     #    if (chk is dht.DHTLIB_OK): #read DHT11 and get a return value. Then determine whether data read is normal according to the return value.
@@ -31,15 +39,91 @@ def get_both():
     #        break
     #    time.sleep(0.1)
     chk = dht.readDHT11()
-    humi = dht.humidity
-    temp = dht.temperature
+    humi = 5#dht.humidity
+    temp = 25#dht.temperature
+    if (temp >= 24 and is_sent):
+        send_email(temp)   
+        is_sent = False
     humi = '{0:0.1f}'.format(humi)
     temp = '{0:0.1f}'.format(temp)
     print(humi)
     print(temp)
     #time.sleep(5)
     return temp, humi
+
+def send_email(temp):
     
+    # Set up the email addresses and password
+    my_address = "iotburner28@gmail.com" # Replace with your own Gmail address
+    my_password = "uefa acwp roct hnuc" # Replace with your Gmail password
+    recipient_address = "ilikefortniteseason4@gmail.com" # Replace with the recipient's email address
+
+    # Create the email message
+    msg = MIMEMultipart()
+    msg['From'] = my_address
+    msg['To'] = recipient_address
+    msg['Subject'] = "IoT Fan"
+
+    # Add the body to the email
+    body = "The current temperature is " + str(temp) + ". Would you like to turn on the fan?"
+    msg.attach(MIMEText(body, 'plain'))
+     
+    # Log in to the Gmail SMTP server
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(my_address, my_password)
+
+    # Send the email
+    text = msg.as_string()
+    server.sendmail(my_address, recipient_address, text)
+
+    # Log out of the server
+    print('sent to ' + recipient_address)
+    server.quit()
+
+def receive_reply():
+    EMAIL = "iotburner28@gmail.com" # Replace with your own Gmail address
+    PASSWORD = "uefa acwp roct hnuc" # Replace with your Gmail password
+    SERVER = "imap.gmail.com"
+
+    # connect to the server and go to its inbox
+    mail = imaplib.IMAP4_SSL(SERVER)
+    mail.login(EMAIL, PASSWORD)
+
+    mail.select('inbox')
+    status, data = mail.search(None, 'ALL')
+    mail_ids = []
+
+    for block in data:
+        mail_ids += block.split()
+
+    for i in mail_ids:
+        status, data = mail.fetch(i, '(RFC822)')
+
+        for response_part in data:
+            if isinstance(response_part, tuple):
+                message = email.message_from_bytes(response_part[1])
+
+                mail_from = message['from']
+                mail_subject = message['subject']
+
+                if message.is_multipart():
+                    mail_content = ''
+
+                    for part in message.get_payload():
+                        if part.get_content_type() == 'text/plain':
+                            mail_content += part.get_payload()
+                else:
+                    mail_content = message.get_payload()
+
+                if mail_content == 'yes' or 'yes' in mail_subject.lower() or any('yes' in recipient.lower() for recipient in message.get_all('to', [])) or 'yes' in mail_content.lower():
+                    print(f'From: {mail_from}')
+                    print(f'Subject: {mail_subject}')
+                    print(f'Content: {mail_content}')
+                    #can starts motor
+def motor():
+    print
+
 #initialize app
 app = Dash(__name__)
 app.title = 'Phase 2'
@@ -47,6 +131,8 @@ app.title = 'Phase 2'
 #initialize image
 led_img = html.Img(src=app.get_asset_url('off.png'),width='150px', height='150px')
 
+
+temp, humi = get_both()
 #dashboard layout
 app.layout = html.Div([
     html.H1(children='Control Panel'),
@@ -66,7 +152,7 @@ app.layout = html.Div([
                 "data": [
                     {
                         "type": "indicator",
-                        "value": 25,
+                        "value": temp,
                         "mode": "gauge+number",
                         "title": {"text": "Temperature"},
                         "gauge": {
@@ -99,7 +185,7 @@ app.layout = html.Div([
                 "data": [
                     {
                         "type": "indicator",
-                        "value": 60,
+                        "value": humi,
                         "mode": "gauge+number",
                         "title": {"text": "Humidity"},
                         "gauge": {
