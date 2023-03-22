@@ -21,6 +21,9 @@ from email.mime.multipart import MIMEMultipart
 
 is_sent = True
 
+Motor1 = 15 # Enable Pin | 22 board
+Motor2 = 13 # Input Pin  | 27 board
+Motor3 = 11 # Input Pin  | 17 board
 #setup GPIO outputs
 lightpin = 12
 GPIO.setmode(GPIO.BOARD)
@@ -39,11 +42,12 @@ def get_both():
     #        break
     #    time.sleep(0.1)
     chk = dht.readDHT11()
-    humi = 5#dht.humidity
-    temp = 25#dht.temperature
+    humi = dht.humidity
+    temp = dht.temperature
     if (temp >= 24 and is_sent):
         send_email(temp)   
         is_sent = False
+    receive_reply()
     humi = '{0:0.1f}'.format(humi)
     temp = '{0:0.1f}'.format(temp)
     print(humi)
@@ -51,6 +55,18 @@ def get_both():
     #time.sleep(5)
     return temp, humi
 
+def motor_on():
+    global Motor1 # Enable Pin | 22 board
+    global Motor2 # Input Pin  | 27 board
+    global Motor3 # Input Pin  | 17 board
+    GPIO.setup(Motor1,GPIO.OUT)
+    GPIO.setup(Motor2,GPIO.OUT)
+    GPIO.setup(Motor3,GPIO.OUT)
+
+    GPIO.output(Motor1,GPIO.HIGH)
+    GPIO.output(Motor2,GPIO.LOW)
+    GPIO.output(Motor3,GPIO.HIGH)
+    
 def send_email(temp):
     
     # Set up the email addresses and password
@@ -120,9 +136,8 @@ def receive_reply():
                     print(f'From: {mail_from}')
                     print(f'Subject: {mail_subject}')
                     print(f'Content: {mail_content}')
-                    #can starts motor
-def motor():
-    print
+                    #can start motor
+                    motor_on()
 
 #initialize app
 app = Dash(__name__)
@@ -143,7 +158,12 @@ app.layout = html.Div([
     ]),
     
     html.Br(),html.Br(),html.Br(),
-
+    
+    html.Div([
+        html.Button('Turn on fan', id='button'),
+        html.Div(id='output')
+    ]),
+    
     html.Div(
     [
         dcc.Graph(
@@ -308,12 +328,30 @@ def control_output(n_clicks):
         #turns off light
         GPIO.output(lightpin, GPIO.LOW)
         #returns updated img
-        return html.Img(src=app.get_asset_url('off.png'),width='300px', height='300px')
+        return html.Img(src=app.get_asset_url('off.png'),width='200px', height='200px')
     else:
         print(n_clicks % 2)
         #turns on light
         GPIO.output(lightpin, GPIO.HIGH)
-        return html.Img(src=app.get_asset_url('on.png'),width='300px', height='300px')
+        return html.Img(src=app.get_asset_url('on.png'),width='200px', height='200px')
+    
+# Define the callback function for the button
+@app.callback(
+    Output('output', 'children'),
+    Input('button', 'n_clicks')
+)
+def update_output(n_clicks):
+    if n_clicks % 2 == 1:
+        print(n_clicks % 2)
+        #turns off motor
+        GPIO.output(Motor1,GPIO.LOW)
+        #returns updated img
+        return ''
+    else:
+        print(n_clicks % 2)
+        #turns on motor
+        motor_on()
+        return ''
 
 #runs server
 if __name__ == '__main__':
