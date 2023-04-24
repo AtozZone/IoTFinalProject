@@ -1,0 +1,69 @@
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.nav-link {
+  color: #ffffff;
+  /* Set the link color to white */
+}
+
+.nav-link:hover {
+  color: #9d9d9d;
+  /* Set the link hover color to light gray */
+}
+
+.nav-link:visited {
+  text-decoration: none;
+}
+
+.sidebar {
+  border-style: "2px solid gray";
+}
+
+/* Set the colors for the track */
+.slider-container .rc-slider-track.rc-slider-track {
+  background: rgb(255, 174, 0)
+}
+
+/* Set the color for the handle */
+.slider-container .rc-slider-handle {
+  background-color: white;
+  border-color: white;
+  cursor: default;
+}
+
+/* Set the color for the rail */
+.slider-container .rc-slider-rail {
+  background-color: #e1e1e1;
+}
+
+.rc-slider-dot {
+  background-color: black;
+  border-color: black;
+  cursor: default;
+}
+
+.rc-slider-disabled {
+  background-color: transparent;
+}
+
+.daq-powerbutton--light__button{
+  background-color: #faf561 !important;
+  background: transparent !important;
+  border: 1px solid black !important;
+}
+
+#our-power-button-1:disabled {
+  opacity: 1 !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  filter: none !important;
+}
+
+
+
+
+
+
